@@ -2,7 +2,7 @@ package csrf
 
 import (
 	"crypto/sha1"
-	"encoding/hex"
+	"encoding/base64"
 	"errors"
 	"io"
 
@@ -68,7 +68,7 @@ func (c *csrf) GetToken() string {
 func tokenize(secret, salt string) string {
 	h := sha1.New()
 	io.WriteString(h, salt+"-"+secret)
-	hash := hex.EncodeToString(h.Sum(nil))
+	hash := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
 	return hash
 }
