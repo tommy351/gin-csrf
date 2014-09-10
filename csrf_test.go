@@ -19,7 +19,7 @@ func newServer(options Options) *gin.Engine {
 	g := gin.New()
 	store := sessions.NewCookieStore([]byte("secret123"))
 
-	g.Use(sessions.Sessions("my_session", store))
+	g.Use(sessions.Middleware("my_session", store))
 	g.Use(Middleware(options))
 
 	return g
@@ -62,8 +62,7 @@ func TestForm(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		token = csrf.GetToken()
+		token = GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -93,8 +92,7 @@ func TestQueryString(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		token = csrf.GetToken()
+		token = GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -122,8 +120,7 @@ func TestQueryHeader1(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		token = csrf.GetToken()
+		token = GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -152,8 +149,7 @@ func TestQueryHeader2(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		token = csrf.GetToken()
+		token = GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -185,8 +181,7 @@ func TestErrorFunc(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		csrf.GetToken()
+		GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -214,8 +209,7 @@ func TestIgnoreMethods(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		csrf.GetToken()
+		GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {
@@ -246,8 +240,7 @@ func TestTokenGetter(t *testing.T) {
 	})
 
 	g.GET("/login", func(c *gin.Context) {
-		csrf := c.MustGet("csrf").(CSRF)
-		token = csrf.GetToken()
+		token = GetToken(c)
 	})
 
 	g.POST("/login", func(c *gin.Context) {

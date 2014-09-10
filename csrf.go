@@ -12,7 +12,9 @@ import (
 )
 
 const (
-	saltKey = "_csrf_salt"
+	csrfSecret = "csrfSecret"
+	csrfSalt   = "csrfSalt"
+	csrfToken  = "csrfToken"
 )
 
 var defaultIgnoreMethods = []string{"GET", "HEAD", "OPTIONS"}
@@ -37,32 +39,12 @@ var defaultTokenGetter = func(c *gin.Context) string {
 	return ""
 }
 
+// Options stores configurations for a CSRF middleware.
 type Options struct {
 	Secret        string
 	IgnoreMethods []string
 	ErrorFunc     gin.HandlerFunc
 	TokenGetter   func(c *gin.Context) string
-}
-
-type CSRF interface {
-	GetToken() string
-}
-
-type csrf struct {
-	secret  string
-	token   string
-	session sessions.Session
-}
-
-func (c *csrf) GetToken() string {
-	if len(c.token) == 0 {
-		salt := uniuri.New()
-		c.token = tokenize(c.secret, salt)
-		c.session.Set(saltKey, salt)
-		c.session.Save()
-	}
-
-	return c.token
 }
 
 func tokenize(secret, salt string) string {
@@ -86,6 +68,7 @@ func inArray(arr []string, value string) bool {
 	return inarr
 }
 
+// Middleware validates CSRF token.
 func Middleware(options Options) gin.HandlerFunc {
 	ignoreMethods := options.IgnoreMethods
 	errorFunc := options.ErrorFunc
@@ -104,36 +87,24 @@ func Middleware(options Options) gin.HandlerFunc {
 	}
 
 	return func(c *gin.Context) {
-		var session sessions.Session
+		session := sessions.Get(c)
+		c.Set(csrfSecret, options.Secret)
 
-		if s, err := c.Get("session"); err != nil {
-			panic(errors.New("You have to install gin-sessions middleware"))
-		} else {
-			session = s.(sessions.Session)
-		}
-
-		r := c.Request
-
-		c.Set("csrf", &csrf{
-			secret:  options.Secret,
-			session: session,
-		})
-
-		if inArray(ignoreMethods, r.Method) {
+		if inArray(ignoreMethods, c.Request.Method) {
 			c.Next()
 			return
 		}
 
 		var salt string
 
-		if s, ok := session.Get(saltKey).(string); !ok || len(s) == 0 {
+		if s, ok := session.Get(csrfSalt).(string); !ok || len(s) == 0 {
 			c.Next()
 			return
 		} else {
 			salt = s
 		}
 
-		session.Delete(saltKey)
+		session.Delete(csrfSalt)
 
 		token := tokenGetter(c)
 
@@ -144,4 +115,22 @@ func Middleware(options Options) gin.HandlerFunc {
 
 		c.Next()
 	}
+}
+
+// GetToken returns a CSRF token.
+func GetToken(c *gin.Context) string {
+	session := sessions.Get(c)
+	secret := c.MustGet(csrfSecret).(string)
+
+	if t, err := c.Get(csrfToken); err == nil {
+		return t.(string)
+	}
+
+	salt := uniuri.New()
+	token := tokenize(secret, salt)
+	session.Set(csrfSalt, salt)
+	session.Save()
+	c.Set(csrfToken, token)
+
+	return token
 }
