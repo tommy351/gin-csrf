@@ -28,7 +28,7 @@ func main(){
     g.Use(csrf.Middleware(csrf.Options{
         Secret: "secret123",
         ErrorFunc: func(c *gin.Context){
-            c.Fail(400, errors.New('CSRF token mismatch'))
+            c.Fail(400, errors.New("CSRF token mismatch"))
         },
     }))
     
