@@ -122,7 +122,7 @@ func GetToken(c *gin.Context) string {
 	session := sessions.Get(c)
 	secret := c.MustGet(csrfSecret).(string)
 
-	if t, err := c.Get(csrfToken); err == nil {
+	if t, ok := c.Get(csrfToken); ok {
 		return t.(string)
 	}
 
