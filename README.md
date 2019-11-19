@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/tommy351/gin-csrf.svg?branch=master)](https://travis-ci.org/tommy351/gin-csrf)
 
-CSRF protection middleware for [Gin]. This middleware has to be used with [gin-sessions].
+CSRF protection middleware for [Gin](https://gin-gonic.com/). This middleware has to be used with [gin-sessions].
 
 ## Installation
 
